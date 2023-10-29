@@ -1,6 +1,6 @@
 # TotallyNotMutable
 
-This one trick makes all your JS mutablity and undo/redo problems disappear (doctors hate it!).
+This one trick makes all your JS mutability and undo/redo problems disappear (doctors hate it!).
 
 ## Intro
 
@@ -213,16 +213,12 @@ export default App;
 
 #### Why was TotallyNotMutable/TotallyVersionable written?
 
-Once upon a time, I needed to implemented undo/redo functionality. ImmutableJS seemed cool so I used it. It worked well, I was happy with it. I didn't touch the code for over year. The one day, I had to do updates on the code base and was not happy about relearning the ImmutableJS api again. At some point, I read some comment somewhere from a seemingly opinionated developer that said something to the effect of "You don't need ImmutableJS, you can just use the spread operator". This comment stuck with me for a while. I wanted to write something that automatically handled the autospread but didn't need to process the input for each mutation like ImmerJS.
+Once upon a time, I needed to implemented undo/redo functionality. ImmutableJS seemed cool, so I used it. It worked well. I was happy with it. I didn't touch the code for over a year. Then one day, I had to make some updates and realized having to relearn the ImmutableJS API again was a pain. At some point during all this, I read some comment from a seemingly opinionated developer that said something to the effect of, "You don't need ImmutableJS, you can just use the spread operator". This comment stuck with me for a while. I wanted to write something that automatically used the spread operator but didn't need to re-process the input for each mutation like ImmerJS.
 
-#### What is the main use case for TotallyNotMutable?
+#### When do I use TotallyNotMutable vs TotallyVersionable?
 
-When immutability is needed.
+Use TotallyVersionable when you need undo/redo. If you don't need undo/redo, you likely should be fine with just TotallyNotMutable.
 
-#### What is the main use case for TotallyVersionable?
+#### What's up with the package name? Why does the name have "not mutable"? You know it's "immutable" right?
 
-When undo/redo is needed and the previous states cannot be mutated.
-
-#### What's up with the package name? Why is it called "not mutable"? You know it's "immutable" right?
-
-Yep. "Immutable" was already taken so I tried to quickly think of name that was going to be available. TotallyNotMutable fit the bill. I have a hard enough time trying to name variables, let alone an entire package.
+Yep. "Immutable" was already taken. TotallyNotMutable's a dope name.
