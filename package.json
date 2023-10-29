@@ -1,6 +1,6 @@
 {
   "name": "totally-not-mutable",
-  "version": "1.0.21",
+  "version": "1.0.22",
   "scripts": {
     "test": "jest",
     "prerelease": "npm run test && npm run build && cp package.json ./build/ && cp README.md ./build/",
