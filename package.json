@@ -3,6 +3,7 @@
   "version": "1.0.22",
   "scripts": {
     "test": "jest",
+    "docs": "typedoc src/index.ts",
     "prerelease": "npm run test && npm run build && cp package.json ./build/ && cp README.md ./build/",
     "release": "cd ./build && npm publish",
     "build": "rm -rf ./build/* && tsc && browserify ./build/TotallyNotMutable.js ./build/TotallyVersionable.js -p esmify -o ./build/browser.js",
@@ -33,6 +34,7 @@
     "lodash.clonedeep": "^4.5.0",
     "seamless-immutable": "^7.1.3",
     "ts-jest": "^29.1.1",
+    "typedoc": "^0.25.2",
     "typescript": "^5.2.2"
   }
 }
