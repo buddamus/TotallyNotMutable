@@ -1,6 +1,6 @@
 {
   "name": "totally-not-mutable",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "scripts": {
     "test": "jest",
     "prepublish": "npm run build && npm run test",
