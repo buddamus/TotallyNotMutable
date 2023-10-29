@@ -1,9 +1,9 @@
 {
   "name": "totally-not-mutable",
-  "version": "1.0.3",
+  "version": "1.0.4",
   "scripts": {
     "test": "jest",
-    "release": "npm run build && npm run test && cp package.json build/ && cd build && npm publish",
+    "release": "npm run build && npm run test && cp package.json build/ && cp README.md build/ && cd build && npm publish",
     "build": "tsc",
     "test:perf": "cd tst/__perf__ && node many-mutations.mjs && node todo.mjs && node large-obj.mjs && node incremental.mjs && node add-data.mjs"
   },
