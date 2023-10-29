@@ -3,9 +3,13 @@ import {
   TotallyNotMutableConfig,
 } from "./TotallyNotMutable";
 
-type PushVersion<T> = { action: "pushVersion"; value: T };
-type DeleteVersion<T> = { action: "deleteVersion"; value: T; index: number };
-type ClearOlderVersions<T> = {
+export type PushVersion<T> = { action: "pushVersion"; value: T };
+export type DeleteVersion<T> = {
+  action: "deleteVersion";
+  value: T;
+  index: number;
+};
+export type ClearOlderVersions<T> = {
   action: "clearOlderVersions";
   deletedVersions: T[];
 };
@@ -71,6 +75,8 @@ export class TotallyVersionable<T> {
    *
    */
   public deleteVersion(index: number) {
+    const deletingCurrentVersion =
+      index >= 0 && index === this._versions.length - 1;
     const version = this._versions.splice(index, 1);
     if (version?.length) {
       this._undoEvents.push({
@@ -78,6 +84,11 @@ export class TotallyVersionable<T> {
         value: version[0],
         index,
       });
+
+      //edge case: if we deleted the latest version
+      if (deletingCurrentVersion) {
+        this.replaceProxyWithCurrent();
+      }
     }
 
     return this.getCurrentVersion();
@@ -108,14 +119,13 @@ export class TotallyVersionable<T> {
       this._redoEvents.push(event);
       if (event.action === "pushVersion") {
         this._versions.pop()!;
-        const newVal = this.getCurrentVersion();
-        if (newVal) {
-          this.tnm.setValue(newVal);
-        } else {
-          this.tnm.clearValue();
-        }
+        this.replaceProxyWithCurrent();
       } else if (event.action === "deleteVersion") {
+        const isRestoringLatestVersion = event.index >= this._versions.length;
         this._versions.splice(event.index, 0, event.value);
+        if (isRestoringLatestVersion) {
+          this.replaceProxyWithCurrent();
+        }
       } else if (event.action === "clearOlderVersions") {
         this._versions = [...event.deletedVersions, ...this._versions];
       }
@@ -123,6 +133,15 @@ export class TotallyVersionable<T> {
 
     return this.getCurrentVersion();
   };
+
+  private replaceProxyWithCurrent() {
+    const newVal = this.getCurrentVersion();
+    if (newVal) {
+      this.tnm.setValue(newVal);
+    } else {
+      this.tnm.clearValue();
+    }
+  }
 
   public getEvents() {
     return [...this._undoEvents];
@@ -137,6 +156,7 @@ export class TotallyVersionable<T> {
       const event = this._redoEvents.pop()!;
       if (event.action === "pushVersion") {
         this._pushVersion(event.value, false);
+        this.replaceProxyWithCurrent();
       } else if (event.action === "deleteVersion") {
         this.deleteVersion(event.index);
       } else if (event.action === "clearOlderVersions") {

@@ -1,12 +1,12 @@
 {
   "name": "totally-not-mutable",
-  "version": "1.0.22",
+  "version": "1.0.23",
   "scripts": {
     "test": "jest",
     "docs": "typedoc src/index.ts",
-    "prerelease": "npm run test && npm run build && cp package.json ./build/ && cp README.md ./build/",
+    "prerelease": "npm run test && npm run build && npm run docs && cp package.json ./build/ && cp README.md ./build/",
     "release": "cd ./build && npm publish",
-    "build": "rm -rf ./build/* && tsc && browserify ./build/TotallyNotMutable.js ./build/TotallyVersionable.js -p esmify -o ./build/browser.js",
+    "build": "rm -rf ./build/* && tsc",
     "test:perf": "cd tst/__perf__ && node many-mutations.mjs && node todo.mjs && node large-obj.mjs && node incremental.mjs && node add-data.mjs"
   },
   "repository": {
@@ -25,7 +25,6 @@
     "@types/jest": "^29.5.5",
     "@types/lodash.clonedeep": "^4.5.7",
     "@types/seamless-immutable": "^7.1.17",
-    "browserify": "^17.0.0",
     "deep-freeze": "^0.0.1",
     "esmify": "^2.1.1",
     "immer": "^10.0.3",

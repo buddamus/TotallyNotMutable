@@ -24,6 +24,22 @@ import { TotallyNotMutableConfig } from "../src/TotallyNotMutable";
         expect(history.getCurrentVersion()).toEqual([0, 1, 3]);
       });
 
+      it("undo to nothing -> redo > mutate", () => {
+        const init: number[] = [0];
+        const history = new TotallyVersionable<typeof init>(config);
+
+        //INITIAL VALUE
+        history.pushVersion(init);
+
+        history.undo();
+        history.redo();
+        history.mutate((val) => val.push(2));
+
+        expect(history.getSizes().undo).toEqual(2);
+        expect(history.getSizes().redo).toEqual(0);
+        expect(history.getCurrentVersion()).toEqual([0, 2]);
+      });
+
       it("multiple undo/redo", () => {
         const init: number[] = [0];
         const history = new TotallyVersionable<typeof init>(config);
@@ -80,6 +96,50 @@ import { TotallyNotMutableConfig } from "../src/TotallyNotMutable";
         expect(history.getSizes().undo).toEqual(5);
         expect(history.getSizes().redo).toEqual(0);
         expect(history.getCurrentVersion()).toEqual([0, 1, 2, 3, 4]);
+      });
+
+      it("delete current version undo redo", () => {
+        const init: number[] = [0];
+        const history = new TotallyVersionable<typeof init>(config);
+
+        //INITIAL VALUE
+        history.pushVersion(init);
+
+        //ADD 4 MORE VERSIONS
+        history.mutate((val) => val.push(1));
+
+        let updatedVal = history.deleteVersion(1);
+
+        expect(updatedVal).toEqual([0]);
+        updatedVal = history.undo();
+
+        expect(updatedVal).toEqual([0, 1]);
+
+        updatedVal = history.redo();
+        expect(updatedVal).toEqual([0]);
+      });
+
+      it.only("delete current version undo mutate", () => {
+        const init: number[] = [0];
+        const history = new TotallyVersionable<typeof init>(config);
+
+        //INITIAL VALUE
+        history.pushVersion(init);
+
+        //ADD 4 MORE VERSIONS
+        history.mutate((val) => val.push(1));
+
+        let updatedVal = history.deleteVersion(1);
+
+        expect(updatedVal).toEqual([0]);
+        updatedVal = history.undo();
+
+        expect(updatedVal).toEqual([0, 1]);
+
+        updatedVal = history.mutate((value) => {
+          value.push(99);
+        });
+        expect(updatedVal).toEqual([0, 1, 99]);
       });
 
       it("delete version undo/redo", () => {

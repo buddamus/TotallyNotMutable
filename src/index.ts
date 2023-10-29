@@ -1,3 +1,2 @@
-import { TotallyNotMutable } from "./TotallyNotMutable";
-import { TotallyVersionable } from "./TotallyVersionable";
-export { TotallyNotMutable, TotallyVersionable };
+export * from "./TotallyNotMutable";
+export * from "./TotallyVersionable";

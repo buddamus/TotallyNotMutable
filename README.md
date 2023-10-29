@@ -59,7 +59,7 @@ const isEqualToMutated = secondValue === fourthValue; //true
 
 ### Confguration
 
-Both classes' constructors take a single parameter as the congiguration which can enable auto freezing. This will be a performance hit but can be usefull in a development environment to ensure resulting data is not being modified externally.
+Both classes' constructors take a single parameter as the configuration which can enable auto freezing. This will be a performance hit but can be usefull in a development environment to ensure resulting data is not being modified externally.
 
 ```
 const tnm = new TotallyNotMutable<SomeType>({autoFreeze:true})

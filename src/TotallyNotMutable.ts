@@ -2,17 +2,29 @@ export type TotallyNotMutableConfig = { autoFreeze?: boolean };
 
 type ProxyUpdate = { path: string[]; key: string; value: any };
 
+export const defaultConfig: TotallyNotMutableConfig = { autoFreeze: false };
+
 export class TotallyNotMutable<T> {
   private proxy!: ProxyConstructor;
   private _internalValue!: T;
-  private _config: TotallyNotMutableConfig = { autoFreeze: false };
+  private _config: TotallyNotMutableConfig = defaultConfig;
 
   private _modifiedPaths: Set<string> = new Set<string>();
   private _proxyUpdatesNeeded: Map<ProxyConstructor, ProxyUpdate> = new Map();
+
+  /**
+   *
+   * Sets up the class with or without autofreeze enabled. It is off by default for performance reasons.
+   * It is a good practice to turn autofreeze on while in development mode to ensure no mutatations are attempted on the value outside of this class.
+   */
   constructor(config?: TotallyNotMutableConfig) {
     this._config = { ...this._config, ...config };
   }
 
+  /**
+   *  Use this to mutate the current value. Remember to call setValue() once before calling this.
+   *  @returns The updated value (not the proxy).
+   */
   public mutate = (handler: (value: T) => void) => {
     if (!this.proxy || !this._internalValue) {
       throw "Cannot call mutate until a value has been has been set.";
@@ -54,7 +66,8 @@ export class TotallyNotMutable<T> {
 
   /**
    *
-   * Only use this when you want to completely overwrite the value
+   * This must be executed at least once before calling mutate(). Separately, use this if you want to do a full replace rather than a mutation. Lastly, use this after a clear() before calling mutate().
+   * @returns The same value that was passed in (not the proxy).
    */
   public setValue = (value: T) => {
     if (typeof value !== "object") {
@@ -69,6 +82,9 @@ export class TotallyNotMutable<T> {
     return this._internalValue;
   };
 
+  /**
+   * Clears the proxy. Will require a setValue() before the next mutate();
+   */
   public clearValue = () => {
     //@ts-ignore
     this._internalValue = undefined;
@@ -99,6 +115,10 @@ export class TotallyNotMutable<T> {
     return o;
   };
 
+  /**
+   *
+   * @returns The actual value (not the proxy).
+   */
   public getValue() {
     return this._internalValue;
   }
