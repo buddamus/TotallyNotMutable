@@ -7,6 +7,23 @@ import { TotallyNotMutableConfig } from "../src/TotallyNotMutable";
 
   describe("TotallyVersionable autofreeze:" + autoFreeze, () => {
     describe("versioning", () => {
+      it("undo then modify", () => {
+        const init: number[] = [0];
+        const history = new TotallyVersionable<typeof init>(config);
+
+        //INITIAL VALUE
+        history.pushVersion(init);
+
+        //ADD 4 MORE VERSIONS
+        history.mutate((val) => val.push(1));
+        history.mutate((val) => val.push(2));
+        history.undo();
+        history.mutate((val) => val.push(3));
+        expect(history.getSizes().undo).toEqual(3);
+        expect(history.getSizes().redo).toEqual(0);
+        expect(history.getCurrentVersion()).toEqual([0, 1, 3]);
+      });
+
       it("multiple undo/redo", () => {
         const init: number[] = [0];
         const history = new TotallyVersionable<typeof init>(config);
@@ -64,6 +81,7 @@ import { TotallyNotMutableConfig } from "../src/TotallyNotMutable";
         expect(history.getSizes().redo).toEqual(0);
         expect(history.getCurrentVersion()).toEqual([0, 1, 2, 3, 4]);
       });
+
       it("delete version undo/redo", () => {
         const init: number[] = [0];
         const history = new TotallyVersionable<typeof init>(config);

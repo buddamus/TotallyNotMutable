@@ -108,6 +108,12 @@ export class TotallyVersionable<T> {
       this._redoEvents.push(event);
       if (event.action === "pushVersion") {
         this._versions.pop()!;
+        const newVal = this.getCurrentVersion();
+        if (newVal) {
+          this.tnm.setValue(newVal);
+        } else {
+          this.tnm.clearValue();
+        }
       } else if (event.action === "deleteVersion") {
         this._versions.splice(event.index, 0, event.value);
       } else if (event.action === "clearOlderVersions") {

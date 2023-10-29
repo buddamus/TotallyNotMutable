@@ -69,6 +69,13 @@ export class TotallyNotMutable<T> {
     return this._internalValue;
   };
 
+  public clearValue = () => {
+    //@ts-ignore
+    this._internalValue = undefined;
+    //@ts-ignore
+    this.proxy = undefined;
+  };
+
   private setupNestedProxy = (o: any, path: any[]) => {
     if (typeof o === "object" && o !== null) {
       const newVal = this.getNewVersion(o);
