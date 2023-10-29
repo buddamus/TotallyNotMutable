@@ -1,14 +1,24 @@
 {
   "name": "totally-not-mutable",
-  "version": "1.0",
+  "version": "1.0.0",
   "scripts": {
     "test": "jest",
     "prepublish": "npm run build && npm run test",
     "build": "tsc",
     "test:perf": "cd tst/__perf__ && node many-mutations.mjs && node todo.mjs && node large-obj.mjs && node incremental.mjs && node add-data.mjs"
   },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/buddamus/TotallyNotMutable.git"
+  },
+  "keywords": [
+    "immutable",
+    "undo",
+    "redo",
+    "mutable"
+  ],
   "files": [
-    "./build"
+    "./build/**"
   ],
   "type": "module",
   "devDependencies": {
