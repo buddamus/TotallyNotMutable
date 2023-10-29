@@ -1,6 +1,6 @@
 {
   "name": "totally-not-mutable",
-  "version": "1.0.4",
+  "version": "1.0.5",
   "scripts": {
     "test": "jest",
     "release": "npm run build && npm run test && cp package.json build/ && cp README.md build/ && cd build && npm publish",
