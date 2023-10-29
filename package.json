@@ -1,9 +1,9 @@
 {
   "name": "totally-not-mutable",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "scripts": {
     "test": "jest",
-    "prepublish": "npm run build && npm run test",
+    "release": "npm run build && npm run test && cp package.json build/ && cd build && npm publish",
     "build": "tsc",
     "test:perf": "cd tst/__perf__ && node many-mutations.mjs && node todo.mjs && node large-obj.mjs && node incremental.mjs && node add-data.mjs"
   },
@@ -16,10 +16,6 @@
     "undo",
     "redo",
     "mutable"
-  ],
-  "files": [
-    "./build/**",
-    "index.js"
   ],
   "type": "module",
   "devDependencies": {
