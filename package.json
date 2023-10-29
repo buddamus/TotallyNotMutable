@@ -3,6 +3,7 @@
   "version": "1.0",
   "scripts": {
     "test": "jest",
+    "prepublish": "npm run build && npm run test",
     "build": "tsc",
     "test:perf": "cd tst/__perf__ && node many-mutations.mjs && node todo.mjs && node large-obj.mjs && node incremental.mjs && node add-data.mjs"
   },
