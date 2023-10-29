@@ -1,12 +1,11 @@
-import {
-  TotallyNotMutable,
-  mutate as mutateInternal,
-} from "../src/TotallyNotMutable";
+import { TotallyNotMutable } from "../src/TotallyNotMutable";
 
 //do each test with auto freeze on/off
 [true, false].forEach((autoFreeze) => {
-  function mutate<T>(val: T, handler: (val: T) => void) {
-    return mutateInternal(val, handler, { autoFreeze });
+  function mutate<T>(value: T, mutate: (value: T) => void): T {
+    const tnm = new TotallyNotMutable<T>({ autoFreeze });
+    tnm.setValue(value);
+    return tnm.mutate(mutate);
   }
 
   describe("TotallyNotMutable autofreeze:" + autoFreeze, () => {

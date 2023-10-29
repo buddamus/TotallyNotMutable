@@ -1,10 +1,11 @@
 {
   "name": "totally-not-mutable",
-  "version": "1.0.11",
+  "version": "1.0.21",
   "scripts": {
     "test": "jest",
-    "release": "rm -rf /build/* && npm run build && npm run test && cp package.json build/ && cp README.md build/ && cd build && npm publish",
-    "build": "tsc",
+    "prerelease": "npm run test && npm run build && cp package.json ./build/ && cp README.md ./build/",
+    "release": "cd ./build && npm publish",
+    "build": "rm -rf ./build/* && tsc && browserify ./build/TotallyNotMutable.js ./build/TotallyVersionable.js -p esmify -o ./build/browser.js",
     "test:perf": "cd tst/__perf__ && node many-mutations.mjs && node todo.mjs && node large-obj.mjs && node incremental.mjs && node add-data.mjs"
   },
   "repository": {
@@ -17,18 +18,15 @@
     "redo",
     "mutable"
   ],
-  "exports": {
-    ".": {
-      "import": "./index.js"
-    }
-  },
   "type": "module",
   "devDependencies": {
     "@types/deep-freeze": "^0.1.4",
     "@types/jest": "^29.5.5",
     "@types/lodash.clonedeep": "^4.5.7",
     "@types/seamless-immutable": "^7.1.17",
+    "browserify": "^17.0.0",
     "deep-freeze": "^0.0.1",
+    "esmify": "^2.1.1",
     "immer": "^10.0.3",
     "immutable": "^3.8.2",
     "jest": "^29.7.0",

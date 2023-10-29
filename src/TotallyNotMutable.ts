@@ -271,13 +271,3 @@ export class TotallyNotMutable<T> {
     }
   }
 }
-
-export function mutate<T>(
-  value: T,
-  mutate: (value: T) => void,
-  config?: TotallyNotMutableConfig
-): T {
-  const tnm = new TotallyNotMutable<T>(config);
-  tnm.setValue(value);
-  return tnm.mutate(mutate);
-}
