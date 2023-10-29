@@ -1,6 +1,6 @@
 {
   "name": "totally-not-mutable",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "scripts": {
     "test": "jest",
     "prepublish": "npm run build && npm run test",
@@ -18,7 +18,8 @@
     "mutable"
   ],
   "files": [
-    "./build/**"
+    "./build/**",
+    "index.js"
   ],
   "type": "module",
   "devDependencies": {
