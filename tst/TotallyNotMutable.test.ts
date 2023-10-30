@@ -2,13 +2,70 @@ import { TotallyNotMutable } from "../src/TotallyNotMutable";
 
 //do each test with auto freeze on/off
 [true, false].forEach((autoFreeze) => {
-  function mutate<T>(value: T, mutate: (value: T) => void): T {
+  function create<T>(value: T) {
     const tnm = new TotallyNotMutable<T>({ autoFreeze });
     tnm.setValue(value);
+    return tnm;
+  }
+
+  function mutate<T>(value: T, mutate: (value: T) => void): T {
+    const tnm = create(value);
     return tnm.mutate(mutate);
   }
 
   describe("TotallyNotMutable autofreeze:" + autoFreeze, () => {
+    describe("apply", () => {
+      it("simple object", () => {
+        const init = { foo: true, bar: false, obj: { hello: "hello" } };
+        const tnm = create(init);
+        const newValue = { ...init, bar: true };
+        let updatedValue = tnm.apply(newValue);
+        expect(updatedValue === newValue).toEqual(true);
+        updatedValue = tnm.mutate((value) => {
+          value.foo = false;
+        });
+        expect(updatedValue === newValue).toEqual(false);
+        expect(updatedValue).toEqual({
+          foo: false,
+          bar: true,
+          obj: { hello: "hello" },
+        });
+        expect(updatedValue.obj === init.obj).toEqual(true);
+      });
+
+      it("nested object", () => {
+        const init = {
+          foo: true,
+          bar: false,
+          obj1: {
+            foo: true,
+            bar: false,
+            obj2: { foo: true, bar: false, obj3: { foo: true, bar: false } },
+          },
+          obj2: {
+            foo: true,
+            bar: false,
+          },
+        };
+        const tnm = create(init);
+        const secondValue = tnm.mutate((val) => (val.obj1.obj2.foo = false));
+        expect(secondValue === init).toEqual(false);
+        expect(secondValue.obj1.obj2.obj3 === init.obj1.obj2.obj3).toEqual(
+          true
+        );
+        expect(secondValue.obj2 === init.obj2).toEqual(true);
+        const appliedValue = tnm.apply(init);
+        expect(appliedValue === init).toEqual(true);
+        const lastValue = tnm.mutate((val) => (val.obj1.obj2.obj3.foo = false));
+        expect(appliedValue === lastValue).toEqual(false);
+        expect(appliedValue.obj2 === lastValue.obj2).toEqual(true);
+      });
+
+      it.only("WRITE TESTS FOR  maps, dates, and othe run ", () => {
+        fail();
+      });
+    });
+
     describe("array object", () => {
       it("change at index", () => {
         const init: string[] = ["1", "2", "3", "4", "5"];

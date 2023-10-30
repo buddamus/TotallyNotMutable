@@ -7,7 +7,7 @@ import immutable from "immutable";
 const { fromJS } = immutable;
 import Seamless from "seamless-immutable";
 import deepFreeze from "deep-freeze";
-import { TotallyNotMutable, mutate } from "../../build/TotallyNotMutable.js";
+import { TotallyNotMutable } from "../../build/TotallyNotMutable.js";
 
 console.log("\n# add-data - loading large set of data\n");
 
@@ -176,5 +176,5 @@ measure(
 );
 
 measure("TotallyNotMutable - read big data set", () => {
-  mutate(dataSet, () => {});
+  new TotallyNotMutable().setValue(dataSet);
 });
