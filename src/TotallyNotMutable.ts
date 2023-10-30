@@ -64,6 +64,90 @@ export class TotallyNotMutable<T> {
     });
   };
 
+  private getKeys(o: any) {
+    return o instanceof Map ? Array.from(o.keys()) : Object.keys(o as {});
+  }
+
+  /**
+   * ONLY use this method when structurally shared objects are common in the old and new value.
+   * If the two values do not share any references, this will be slower than calling setValue()
+   
+   * This method recursively applies all the properties of new value to the internal value. Any properties 
+   * that exist in the old value but not in the new value will be deleted.
+   * 
+   * This is method is ideal for an undo/redo scenario where the new value is structurally simiar to the old value.
+   */
+  public apply = (value: T) => {
+    //TODO: refactor to use existing validity check
+    if (value === null || value === undefined || typeof value !== "object") {
+      throw "only objects can be passed in";
+    }
+
+    //this is a trick. We use mutate so that all of the differences that causes mutations will update the proxy,
+    //then after the mutations are done, we simply swap out internal value for the desired value
+    this.mutate((proxy) => {
+      this._applyNested(
+        proxy as ProxyConstructor,
+        this._internalValue,
+        value,
+        []
+      );
+    });
+    this._internalValue = value;
+    return this._internalValue;
+  };
+
+  private _applyNested(
+    proxy: ProxyConstructor,
+    existingValue: any,
+    newValue: any,
+    path: string[]
+  ): ProxyConstructor {
+    const existingKeys = this.getKeys(existingValue);
+    const newKeys = this.getKeys(newValue);
+
+    //delete keys in the proxy that doesn't exist in the new value
+    existingKeys
+      .filter((x) => !newKeys.includes(x))
+      .forEach((key) => Reflect.deleteProperty(proxy as object, key));
+
+    //add keys the new value has that the proxy doesn't
+    newKeys
+      .filter((x) => !existingKeys.includes(x))
+      .forEach((key) => {
+        const keyValue = Reflect.get(newValue, key);
+        Reflect.set(proxy as object, key, keyValue);
+      });
+
+    //keys thst exist in both objects
+    newKeys
+      .filter((x) => existingKeys.includes(x))
+      .forEach((key) => {
+        const existingKeyValue = Reflect.get(existingValue, key);
+        const newKeyValue = Reflect.get(newValue, key);
+        if (existingKeyValue === newKeyValue) {
+          //these are structurally shared objects, nothing to do here
+          return;
+        }
+        //values are different
+        if (
+          typeof existingKeyValue === "object" &&
+          typeof newKeyValue === "object"
+        ) {
+          //these objects are different, but they could share children objects
+          const proxyValue = Reflect.get(proxy, key);
+          this._applyNested(proxyValue, existingKeyValue, newKeyValue, [
+            ...path,
+            key,
+          ]);
+        } else {
+          Reflect.set(proxy as object, key, newKeyValue);
+        }
+      });
+
+    return proxy;
+  }
+
   /**
    *
    * This must be executed at least once before calling mutate(). Separately, use this if you want to do a full replace rather than a mutation. Lastly, use this after a clear() before calling mutate().
