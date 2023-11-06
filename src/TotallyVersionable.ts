@@ -137,7 +137,7 @@ export class TotallyVersionable<T> {
   private replaceProxyWithCurrent() {
     const newVal = this.getCurrentVersion();
     if (newVal) {
-      this.tnm.apply(newVal);
+      this.tnm.setValue(newVal);
     } else {
       this.tnm.clearValue();
     }

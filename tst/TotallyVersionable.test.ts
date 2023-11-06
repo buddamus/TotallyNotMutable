@@ -119,7 +119,7 @@ import { TotallyNotMutableConfig } from "../src/TotallyNotMutable";
         expect(updatedVal).toEqual([0]);
       });
 
-      it.only("delete current version undo mutate", () => {
+      it("delete current version undo mutate", () => {
         const init: number[] = [0];
         const history = new TotallyVersionable<typeof init>(config);
 

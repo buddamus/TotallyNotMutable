@@ -1,10 +1,21 @@
+import { TotallyNotMutable } from "../../build/TotallyNotMutable.js";
 import { measure } from "./measure.mjs";
 import { produce, setUseStrictShallowCopy } from "immer";
-import { mutate } from "../../build/TotallyNotMutable.js";
 
 console.log("\n# large-obj - mutate large object\n");
 
 const MAX = 50;
+
+function create(value, config) {
+  const tnm = new TotallyNotMutable(config);
+  tnm.setValue(value);
+  return tnm;
+}
+
+function mutate(value, mutate, config) {
+  const tnm = create(value, config);
+  return tnm.mutate(mutate);
+}
 
 const baseState = Object.fromEntries(
   Array(10000)

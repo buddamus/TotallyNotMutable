@@ -14,59 +14,294 @@ import { TotallyNotMutable } from "../src/TotallyNotMutable";
   }
 
   describe("TotallyNotMutable autofreeze:" + autoFreeze, () => {
-    describe("apply", () => {
-      it("simple object", () => {
-        const init = { foo: true, bar: false, obj: { hello: "hello" } };
-        const tnm = create(init);
-        const newValue = { ...init, bar: true };
-        let updatedValue = tnm.apply(newValue);
-        expect(updatedValue === newValue).toEqual(true);
-        updatedValue = tnm.mutate((value) => {
-          value.foo = false;
-        });
-        expect(updatedValue === newValue).toEqual(false);
-        expect(updatedValue).toEqual({
-          foo: false,
-          bar: true,
-          obj: { hello: "hello" },
-        });
-        expect(updatedValue.obj === init.obj).toEqual(true);
-      });
+    // describe("apply", () => {
+    //   it("simple object", () => {
+    //     const init = { foo: true, bar: false, obj: { hello: "hello" } };
+    //     const tnm = create(init);
+    //     const newValue = { ...init, bar: true };
+    //     let updatedValue = tnm.apply(newValue);
+    //     expect(updatedValue === newValue).toEqual(true);
+    //     updatedValue = tnm.mutate((value) => {
+    //       value.foo = false;
+    //     });
+    //     expect(updatedValue === newValue).toEqual(false);
+    //     expect(updatedValue).toEqual({
+    //       foo: false,
+    //       bar: true,
+    //       obj: { hello: "hello" },
+    //     });
+    //     expect(updatedValue.obj === init.obj).toEqual(true);
+    //   });
 
-      it("nested object", () => {
-        const init = {
-          foo: true,
-          bar: false,
-          obj1: {
-            foo: true,
-            bar: false,
-            obj2: { foo: true, bar: false, obj3: { foo: true, bar: false } },
-          },
-          obj2: {
-            foo: true,
-            bar: false,
-          },
-        };
-        const tnm = create(init);
-        const secondValue = tnm.mutate((val) => (val.obj1.obj2.foo = false));
-        expect(secondValue === init).toEqual(false);
-        expect(secondValue.obj1.obj2.obj3 === init.obj1.obj2.obj3).toEqual(
-          true
-        );
-        expect(secondValue.obj2 === init.obj2).toEqual(true);
-        const appliedValue = tnm.apply(init);
-        expect(appliedValue === init).toEqual(true);
-        const lastValue = tnm.mutate((val) => (val.obj1.obj2.obj3.foo = false));
-        expect(appliedValue === lastValue).toEqual(false);
-        expect(appliedValue.obj2 === lastValue.obj2).toEqual(true);
-      });
+    //   it("nested object", () => {
+    //     const init = {
+    //       foo: true,
+    //       bar: false,
+    //       obj1: {
+    //         foo: true,
+    //         bar: false,
+    //         obj2: { foo: true, bar: false, obj3: { foo: true, bar: false } },
+    //       },
+    //       obj2: {
+    //         foo: true,
+    //         bar: false,
+    //       },
+    //     };
+    //     const tnm = create(init);
+    //     const secondValue = tnm.mutate((val) => (val.obj1.obj2.foo = false));
+    //     expect(secondValue === init).toEqual(false);
+    //     expect(secondValue.obj1.obj2.obj3 === init.obj1.obj2.obj3).toEqual(
+    //       true
+    //     );
+    //     expect(secondValue.obj2 === init.obj2).toEqual(true);
+    //     const appliedValue = tnm.apply(init);
+    //     expect(appliedValue === init).toEqual(true);
+    //     const lastValue = tnm.mutate((val) => (val.obj1.obj2.obj3.foo = false));
+    //     expect(appliedValue === lastValue).toEqual(false);
+    //     expect(appliedValue.obj2 === lastValue.obj2).toEqual(true);
+    //   });
 
-      it.only("WRITE TESTS FOR  maps, dates, and othe run ", () => {
-        fail();
-      });
-    });
+    //   it("Map", () => {
+    //     const mapMalues = [
+    //       ["test", "value"],
+    //       ["hello", "world"],
+    //       ["foo", "bar"],
+    //     ] as const;
+
+    //     const init = new Map<string, string>(mapMalues);
+
+    //     const tnm = create(init);
+
+    //     const mutatedValue = tnm.mutate((val) => {
+    //       val.set("test", "newval");
+    //       val.delete("foo");
+    //       val.set("newkey", "yayy");
+    //     });
+
+    //     const appliedValue = tnm.apply(init);
+
+    //     expect(mutatedValue === init).toEqual(false);
+    //     expect(appliedValue === init).toEqual(true);
+    //     const finalValue = tnm.mutate((val) => {
+    //       val.set("final", "final");
+    //     });
+
+    //     expect(finalValue).toEqual(new Map([...mapMalues, ["final", "final"]]));
+    //   });
+
+    //   it("plain object", () => {
+    //     const arr: Record<string, { foo: string }> = {
+    //       a: { foo: "initial" },
+    //       b: { foo: "initial" },
+    //       c: { foo: "initial" },
+    //     };
+
+    //     const tnm = create(arr);
+    //     const mutatedValue = tnm.mutate((val) => {
+    //       delete val.b;
+    //     });
+    //     expect(mutatedValue).toEqual({
+    //       a: { foo: "initial" },
+    //       c: { foo: "initial" },
+    //     });
+    //   });
+
+    //   it("array", () => {
+    //     const arr: { foo: string }[] = [
+    //       { foo: "initial" },
+    //       { foo: "initial" },
+    //       { foo: "initial" },
+    //     ];
+
+    //     const tnm = create(arr);
+
+    //     const mutatedValue = tnm.mutate((val) => {
+    //       val.splice(1, 1);
+    //     });
+
+    //     expect(mutatedValue).toEqual([{ foo: "initial" }, { foo: "initial" }]);
+
+    //     const appliedValue = tnm.apply(arr);
+    //     expect(appliedValue).toEqual([
+    //       { foo: "initial" },
+    //       { foo: "initial" },
+    //       { foo: "initial" },
+    //     ]);
+
+    //     expect(mutatedValue === arr).toEqual(false);
+    //     expect(appliedValue === arr).toEqual(true);
+
+    //     console.log("MUTATING AGAIN..");
+    //     const finalValue = tnm.mutate((val) => {
+    //       console.log({ val });
+    //       val.splice(1, 1);
+    //       console.log({ val });
+    //       val[0].foo = "mutated again";
+    //     });
+
+    //     expect(finalValue).toEqual([
+    //       { foo: "mutated again" },
+    //       { foo: "initial" },
+    //     ]);
+    //   });
+    // });
 
     describe("array object", () => {
+      it("change at index", () => {
+        const init = [
+          { b: true },
+          { b: true },
+          { b: true },
+          { b: true },
+          { b: true },
+        ];
+
+        const tnm = new TotallyNotMutable<typeof init>({ autoFreeze });
+
+        tnm.setValue(init);
+
+        const ensureInitCorrect = () => {
+          expect(init).toEqual([
+            { b: true },
+            { b: true },
+            { b: true },
+            { b: true },
+            { b: true },
+          ]);
+        };
+
+        ensureInitCorrect();
+
+        const result1 = tnm.mutate((val) => {
+          val[2].b = false;
+        });
+
+        const ensureResult1Correct = () => {
+          expect(result1).toEqual([
+            { b: true },
+            { b: true },
+            { b: false },
+            { b: true },
+            { b: true },
+          ]);
+        };
+
+        ensureInitCorrect();
+        ensureResult1Correct();
+        const result2 = tnm.mutate((val) => {
+          val.push({ b: false });
+        });
+
+        const ensureResult2Correct = () => {
+          expect(result2).toEqual([
+            { b: true },
+            { b: true },
+            { b: false },
+            { b: true },
+            { b: true },
+            { b: false },
+          ]);
+        };
+
+        ensureInitCorrect();
+        ensureResult1Correct();
+        ensureResult2Correct();
+
+        const result3 = tnm.mutate((val) => {
+          val[5].b = true;
+        });
+        const ensureResult3Correct = () => {
+          expect(result3).toEqual([
+            { b: true },
+            { b: true },
+            { b: false },
+            { b: true },
+            { b: true },
+            { b: true },
+          ]);
+        };
+
+        ensureInitCorrect();
+        ensureResult1Correct();
+        ensureResult2Correct();
+        ensureResult3Correct();
+
+        const result4 = tnm.mutate((val) => {
+          val.splice(2, 1, { b: false }, { b: false });
+        });
+
+        const ensureResult4Correct = () => {
+          expect(result4).toEqual([
+            { b: true },
+            { b: true },
+            { b: false },
+            { b: false },
+            { b: true },
+            { b: true },
+            { b: true },
+          ]);
+        };
+
+        ensureInitCorrect();
+        ensureResult1Correct();
+        ensureResult2Correct();
+        ensureResult3Correct();
+        ensureResult4Correct();
+
+        const result5 = tnm.mutate((val) => {
+          val.push({ b: false });
+        });
+
+        const ensureResult5Correct = () => {
+          expect(result5).toEqual([
+            { b: true },
+            { b: true },
+            { b: false },
+            { b: false },
+            { b: true },
+            { b: true },
+            { b: true },
+            { b: false },
+          ]);
+        };
+
+        ensureInitCorrect();
+        ensureResult1Correct();
+        ensureResult2Correct();
+        ensureResult3Correct();
+        ensureResult4Correct();
+        ensureResult5Correct();
+        const result6 = tnm.mutate((val) => {
+          val[0].b = false;
+          val[1].b = false;
+          val[2].b = false;
+          val[3].b = false;
+          val[4].b = false;
+          val[5].b = true;
+        });
+
+        const ensureResult6Correct = () => {
+          expect(result6).toEqual([
+            { b: false },
+            { b: false },
+            { b: false },
+            { b: false },
+            { b: false },
+            { b: true },
+            { b: true },
+            { b: false },
+          ]);
+        };
+
+        ensureInitCorrect();
+        ensureResult1Correct();
+        ensureResult2Correct();
+        ensureResult3Correct();
+        ensureResult4Correct();
+        ensureResult5Correct();
+        ensureResult6Correct();
+      });
+
       it("change at index", () => {
         const init: string[] = ["1", "2", "3", "4", "5"];
         const result = mutate(init, (val) => {
@@ -310,6 +545,32 @@ import { TotallyNotMutable } from "../src/TotallyNotMutable";
     });
 
     describe("funky", () => {
+      it("set then mutate, reset back to original value then mutate", () => {
+        const init: { bool: boolean; s?: string } = { bool: true };
+        const tnm = new TotallyNotMutable<typeof init>();
+        tnm.setValue(init);
+        tnm.mutate((val) => {
+          val.bool = false;
+        });
+        expect(tnm.getValue()).toEqual({ bool: false });
+        const result = tnm.mutate((val) => {
+          val.s = "hello";
+        });
+        expect(result).toEqual({ bool: false, s: "hello" });
+
+        //do the same thing again
+        tnm.setValue(init);
+        expect(tnm.getValue()).toEqual(init);
+        tnm.mutate((val) => {
+          val.bool = false;
+        });
+        expect(tnm.getValue()).toEqual({ bool: false });
+        const result2 = tnm.mutate((val) => {
+          val.s = "hello";
+        });
+        expect(result2).toEqual({ bool: false, s: "hello" });
+      });
+
       it("set multiple array indexes to the same object value then update the object afterwards #1", () => {
         const init: { test: boolean }[] = [];
         const result = mutate(init, (val) => {
@@ -337,10 +598,15 @@ import { TotallyNotMutable } from "../src/TotallyNotMutable";
 
           //update the first item in the array (which should point to the same object as the second element)
           val[0].test = false;
+          val.push(sameVal);
         });
         expect(result === init).toEqual(false);
         expect(init).toEqual([]);
-        expect(result).toEqual([{ test: false }, { test: false }]);
+        expect(result).toEqual([
+          { test: false },
+          { test: false },
+          { test: false },
+        ]);
       });
 
       it("set multiple array indexes to the same object value then update the object afterwards #3", () => {
@@ -409,6 +675,8 @@ import { TotallyNotMutable } from "../src/TotallyNotMutable";
           expect(val1 === init).toEqual(true);
         };
 
+        ensureVal1Correct();
+
         //mutate
         const val2 = tnm.mutate((draft) => {
           draft.arr.push(4);
@@ -424,6 +692,9 @@ import { TotallyNotMutable } from "../src/TotallyNotMutable";
           });
           expect(val2.untouchedObject === init.untouchedObject).toEqual(true);
         };
+
+        ensureVal1Correct();
+        ensureVal2Correct();
 
         const val3 = tnm.mutate((draft) => {
           draft.arr.push(5);
@@ -448,6 +719,7 @@ import { TotallyNotMutable } from "../src/TotallyNotMutable";
       });
 
       it("mutate three times: set array -> push array -> replace array -> push array", () => {
+        console.log("TESTING", { autoFreeze });
         const init = {
           arr: [1, 2, 3],
           untouchedObject: { foo: "bar" },
@@ -465,6 +737,8 @@ import { TotallyNotMutable } from "../src/TotallyNotMutable";
           expect(val1 === init).toEqual(true);
         };
 
+        ensureVal1Correct();
+
         //mutate
         const val2 = tnm.mutate((draft) => {
           draft.arr.push(4);
@@ -476,6 +750,8 @@ import { TotallyNotMutable } from "../src/TotallyNotMutable";
           });
           expect(val2.untouchedObject === init.untouchedObject).toEqual(true);
         };
+        ensureVal1Correct();
+        ensureVal2Correct();
 
         const val3 = tnm.mutate((draft) => {
           draft.arr = [10, 10, 10];
@@ -490,6 +766,10 @@ import { TotallyNotMutable } from "../src/TotallyNotMutable";
           expect(val3.untouchedObject === init.untouchedObject).toEqual(true);
           expect(val3 === init).toEqual(false);
         };
+
+        ensureVal1Correct();
+        ensureVal2Correct();
+        ensureVal3Correct();
 
         const val4 = tnm.mutate((draft) => {
           draft.arr.push(11);
