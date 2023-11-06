@@ -340,7 +340,10 @@ import { TotallyNotMutable } from "../src/TotallyNotMutable";
 
       it("arr.length = 0 (clearing)", () => {
         const init: string[] = ["val2", "val2"];
-        const result = mutate(init, (val) => {
+
+        const tnm = new TotallyNotMutable<typeof init>({ autoFreeze });
+        tnm.setValue(init);
+        const result = tnm.mutate((val) => {
           val.length = 0;
         });
         expect(result).toEqual([]);
@@ -547,7 +550,7 @@ import { TotallyNotMutable } from "../src/TotallyNotMutable";
     describe("funky", () => {
       it("set then mutate, reset back to original value then mutate", () => {
         const init: { bool: boolean; s?: string } = { bool: true };
-        const tnm = new TotallyNotMutable<typeof init>();
+        const tnm = new TotallyNotMutable<typeof init>({ autoFreeze });
         tnm.setValue(init);
         tnm.mutate((val) => {
           val.bool = false;
@@ -719,7 +722,6 @@ import { TotallyNotMutable } from "../src/TotallyNotMutable";
       });
 
       it("mutate three times: set array -> push array -> replace array -> push array", () => {
-        console.log("TESTING", { autoFreeze });
         const init = {
           arr: [1, 2, 3],
           untouchedObject: { foo: "bar" },

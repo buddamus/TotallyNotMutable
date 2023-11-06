@@ -7,15 +7,13 @@ type ParentArray = Parent & { arrayIndex: number };
 type ParentObject = Parent & { parent: any; key: any };
 type ParentRef = ParentArray | ParentObject | null;
 
-type ProxyUpdate = { parentRef: ParentRef; key: string; value: any };
-
 export class TotallyNotMutable<T> {
   private proxy!: ProxyConstructor;
   private _internalValue!: T;
   private _config: TotallyNotMutableConfig = defaultConfig;
 
   private _modifiedPaths: Set<object> = new Set();
-  private _proxyUpdatesNeeded: Map<ProxyConstructor, ProxyUpdate> = new Map();
+  private _proxyUpdatesNeeded: Map<any, ParentRef> = new Map();
 
   private _mapObjectToParent: WeakMap<
     Map<any, any> | Record<string, any>,
@@ -46,9 +44,13 @@ export class TotallyNotMutable<T> {
     handler(this.proxy as T);
 
     if (this._proxyUpdatesNeeded.size) {
-      this._proxyUpdatesNeeded.forEach((proxyUpdate, target) => {
-        const { key, value, parentRef } = proxyUpdate;
-        Reflect.set(target, key, this.setupNestedProxy(value, parentRef));
+      this._proxyUpdatesNeeded.forEach((parentRef, value) => {
+        Reflect.set(
+          parentRef?.parent,
+          (parentRef as ParentObject)?.key ||
+            (parentRef as ParentArray)?.arrayIndex,
+          this.setupNestedProxy(value, parentRef)
+        );
       });
     }
 
@@ -147,35 +149,44 @@ export class TotallyNotMutable<T> {
     this.proxy = undefined;
   };
 
+  private mapObjectToProxy: WeakMap<any, any> = new WeakMap();
+  private getOrCreateProxy = (o: any, parentRef: ParentRef) => {
+    const existing = this.mapObjectToProxy.get(o);
+
+    if (existing) {
+      return existing;
+    }
+
+    const proxy = new Proxy(o, this.getValidator(parentRef));
+
+    this._mapObjectToParent.set(proxy, parentRef);
+
+    if (o instanceof Map) {
+      Array.from(o.keys()).forEach((key) => {
+        const newProxy = this.setupNestedProxy(o.get(key), {
+          parent: o,
+          key,
+        });
+        Reflect.set(o, key, newProxy);
+      });
+    } else if (Array.isArray(o)) {
+      o.forEach((item, index) => {
+        o[index] = this.setupNestedProxy(o[index], {
+          parent: proxy,
+          arrayIndex: index,
+        });
+      });
+    } else {
+      Object.keys(o).forEach((key) => {
+        o[key] = this.setupNestedProxy(o[key], { parent: proxy, key });
+      });
+    }
+    return proxy;
+  };
+
   private setupNestedProxy = (o: any, parentRef: ParentRef) => {
     if (typeof o === "object" && o !== null) {
-      const newVal = this.getNewVersionIfNotUsedYet(o);
-      const proxy = new Proxy(newVal, this.getValidator(parentRef));
-
-      this._mapObjectToParent.set(proxy, parentRef);
-
-      if (o instanceof Map) {
-        Array.from(o.keys()).forEach((key) => {
-          const newProxy = this.setupNestedProxy(o.get(key), {
-            parent: o,
-            key,
-          });
-          Reflect.set(newVal, key, newProxy);
-        });
-      } else if (Array.isArray(o)) {
-        o.forEach((item, index) => {
-          newVal[index] = this.setupNestedProxy(o[index], {
-            parent: proxy,
-            arrayIndex: index,
-          });
-        });
-      } else {
-        Object.keys(o).forEach((key) => {
-          newVal[key] = this.setupNestedProxy(o[key], { parent: proxy, key });
-        });
-      }
-
-      return proxy;
+      return this.getOrCreateProxy(this.getOrCreateNewVersion(o), parentRef);
     }
     return o;
   };
@@ -217,7 +228,10 @@ export class TotallyNotMutable<T> {
   };
 
   private _newVersions: Map<any, any> = new Map();
-  private getNewVersionIfNotUsedYet = (o: any) => {
+  private getOrCreateNewVersion = (o: any) => {
+    if (typeof o !== "object") {
+      return o;
+    }
     const existing = this._newVersions.get(o);
 
     if (existing) {
@@ -298,11 +312,6 @@ export class TotallyNotMutable<T> {
       this.proxy,
       this._internalValue,
       (newValue) => {
-        this.log("updating internal value for", {
-          parentRef,
-          newValue: JSON.stringify(newValue),
-          _internalValue: JSON.stringify(this._internalValue),
-        });
         this._internalValue = newValue;
       }
     );
@@ -426,6 +435,12 @@ export class TotallyNotMutable<T> {
     return typeOfObject;
   }
 
+  private getParentRefKey(parentRef: ParentRef): any {
+    return (
+      (parentRef as ParentObject).key || (parentRef as ParentArray).arrayIndex
+    );
+  }
+
   private getValidator(parentRef: ParentRef) {
     //store the reference
     const handler: ProxyHandler<any> = {
@@ -441,10 +456,6 @@ export class TotallyNotMutable<T> {
 
             const { target: internalTarget } =
               this.createNewInternalValueAndTarget(parentRef);
-            this.log("BEFORE", {
-              target: JSON.stringify(target),
-              internalTarget: JSON.stringify(internalTarget),
-            });
 
             value.apply(
               target,
@@ -488,39 +499,19 @@ export class TotallyNotMutable<T> {
             }
 
             value.apply(internalTarget, args);
-
-            // args.forEach((arg) => {
-            //   if (typeof arg === "object") {
-            //     this.log("NEW OBJECT", { arg, parentRef });
-
-            //     this.handleNewObject(arg, parentRef);
-            //   }
-            // });
-
-            /*
-             * Do anything special here
-             */
-
-            // this.log({ parentPath, key, receiver });
-
-            this.log("AFTER", {
-              target: JSON.stringify(target),
-              internalTarget: JSON.stringify(internalTarget),
-            });
           };
         }
         return value;
       },
       set: (target, key, value) => {
         this.log("SETTING", { target, key, value, parentRef });
-        Reflect.set(
-          target,
-          key,
-          this.setupNestedProxy(value, this.getParentRef(target, key as string))
-        );
+        const newValue = this.getOrCreateNewVersion(value);
+        Reflect.set(target, key, newValue);
         this.updateInternalValue(parentRef, key as string, value);
-
-        //this.scheduleProxyUpdate(target, parentRef, key as string, value);
+        this.scheduleProxyUpdate(
+          newValue,
+          this.getParentRef(target, key as string)
+        );
 
         return true;
       },
@@ -532,21 +523,13 @@ export class TotallyNotMutable<T> {
       defineProperty: (target, key, attributes) => {
         this.log("DEFINE", { target, key, attributes });
         if ("value" in attributes) {
-          Reflect.set(
-            target,
-            key,
-            this.setupNestedProxy(
-              attributes.value,
-              this.getParentRef(target, key as string)
-            )
-          );
+          const newValue = this.getOrCreateNewVersion(attributes.value);
+          Reflect.set(target, key, newValue);
           this.updateInternalValue(parentRef, key as string, attributes.value);
-          // this.scheduleProxyUpdate(
-          //   target,
-          //   parentRef,
-          //   key as string,
-          //   attributes.value
-          // );
+          this.scheduleProxyUpdate(
+            newValue,
+            this.getParentRef(target, key as string)
+          );
         }
 
         return true;
@@ -644,18 +627,9 @@ export class TotallyNotMutable<T> {
     this._logging = val;
   }
 
-  private scheduleProxyUpdate(
-    target: any,
-    parentRef: ParentRef,
-    key: string,
-    value: any
-  ) {
+  private scheduleProxyUpdate(value: any, parentRef: ParentRef) {
     if (typeof value === "object") {
-      this._proxyUpdatesNeeded.set(target, {
-        parentRef,
-        key,
-        value,
-      });
+      this._proxyUpdatesNeeded.set(value, parentRef);
     }
   }
 }
