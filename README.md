@@ -1,6 +1,8 @@
-# TotallyNotMutable
+# TotallyNotMutable (BETA)
 
 This one trick makes all your JS mutability and undo/redo problems disappear (doctors hate it!).
+
+This is in beta and should not be considered stable until version 2.0. Please stay tuned.
 
 ## Intro
 
