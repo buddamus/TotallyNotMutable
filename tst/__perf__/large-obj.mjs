@@ -1,21 +1,11 @@
-import { TotallyNotMutable } from "../../build/TotallyNotMutable.js";
 import { measure } from "./measure.mjs";
 import { produce, setUseStrictShallowCopy } from "immer";
+import Immutable from "immutable";
+import { TotallyNotMutable } from "../../build/TotallyNotMutable.js";
 
 console.log("\n# large-obj - mutate large object\n");
 
 const MAX = 50;
-
-function create(value, config) {
-  const tnm = new TotallyNotMutable(config);
-  tnm.setValue(value);
-  return tnm;
-}
-
-function mutate(value, mutate, config) {
-  const tnm = create(value, config);
-  return tnm.mutate(mutate);
-}
 
 const baseState = Object.fromEntries(
   Array(10000)
@@ -43,9 +33,28 @@ measure("immer - without setUseStrictShallowCopy", () => {
   }
 });
 
+measure("immutableJS", () => {
+  for (let i = 0; i < MAX; i++) {
+    const map = Immutable.Map(baseState);
+    map.set("5000", map.get("5000") + 1);
+  }
+});
+
+measure("immutableJS + toJs at end", () => {
+  let result;
+  for (let i = 0; i < MAX; i++) {
+    const map = Immutable.Map(baseState);
+    result = map.set("5000", map.get("5000") + 1);
+  }
+  //toJS() only when you actually need the plain value back - once, at the end
+  result.toJS();
+});
+
 measure("TotallyNotMutable", () => {
   for (let i = 0; i < MAX; i++) {
-    mutate(baseState, (draft) => {
+    const tnm = new TotallyNotMutable();
+    tnm.setValue(baseState);
+    tnm.mutate((draft) => {
       draft[5000]++;
     });
   }
@@ -53,12 +62,10 @@ measure("TotallyNotMutable", () => {
 
 measure("TotallyNotMutable w/autofreeze", () => {
   for (let i = 0; i < MAX; i++) {
-    mutate(
-      baseState,
-      (draft) => {
-        draft[5000]++;
-      },
-      { autoFreeze: true }
-    );
+    const tnm = new TotallyNotMutable(undefined, { autoFreeze: true });
+    tnm.setValue(baseState);
+    tnm.mutate((draft) => {
+      draft[5000]++;
+    });
   }
 });

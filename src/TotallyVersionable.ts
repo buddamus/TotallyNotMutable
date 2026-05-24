@@ -19,14 +19,17 @@ export type VersionEvent<T> =
   | DeleteVersion<T>
   | ClearOlderVersions<T>;
 
-export class TotallyVersionable<T> {
+export class TotallyVersionable<T extends object> {
   private _undoEvents: VersionEvent<T>[] = [] as VersionEvent<T>[];
   private _redoEvents: VersionEvent<T>[] = [] as VersionEvent<T>[];
   private _versions: (T | never)[] = [];
 
   private tnm: TotallyNotMutable<T>;
-  constructor(config?: TotallyNotMutableConfig) {
-    this.tnm = new TotallyNotMutable<T>(config);
+  constructor(value?: T, config?: TotallyNotMutableConfig) {
+    this.tnm = new TotallyNotMutable<T>(undefined, config);
+    if (value !== undefined) {
+      this.pushVersion(value);
+    }
   }
 
   /**
@@ -66,7 +69,7 @@ export class TotallyVersionable<T> {
     if (version) {
       return this.pushVersion(version);
     } else {
-      throw "Version doesn't exist.";
+      throw new Error("Version doesn't exist.");
     }
   }
 
@@ -137,7 +140,16 @@ export class TotallyVersionable<T> {
   private replaceProxyWithCurrent() {
     const newVal = this.getCurrentVersion();
     if (newVal) {
-      this.tnm.setValue(newVal);
+      //reconcile() diffs against the current proxy and only re-processes what
+      //changed, which is far cheaper than rebuilding it from scratch when the
+      //versions are structurally similar (the common undo/redo case). It needs
+      //an existing proxy though, so fall back to setValue() when there isn't one
+      //(e.g. after undoing all the way to an empty history cleared the proxy).
+      if (this.tnm.getValue()) {
+        this.tnm.reconcile(newVal);
+      } else {
+        this.tnm.setValue(newVal);
+      }
     } else {
       this.tnm.clearValue();
     }

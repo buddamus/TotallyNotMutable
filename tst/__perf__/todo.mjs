@@ -10,7 +10,10 @@ import cloneDeep from "lodash.clonedeep";
 import immutable from "immutable";
 import Seamless from "seamless-immutable";
 import deepFreeze from "deep-freeze";
-import { TotallyNotMutable } from "../../build/TotallyNotMutable.js";
+import {
+  getTotallyInitialState,
+  getTotallyInitialStateAutofreeze,
+} from "./tnm-helpers.mjs";
 
 const { List, Record } = immutable;
 
@@ -48,23 +51,6 @@ immutableJsBaseState = List(baseState.map((todo) => todoRecord(todo)));
 
 // generate seamless-immutable base state
 seamlessBaseState = Seamless.from(baseState);
-
-const tnm = new TotallyNotMutable();
-const tnmAutoFreeze = new TotallyNotMutable({ autoFreeze: true });
-
-/**
- * @param {any} value
- * @returns {TotallyNotMutable}
- */
-export const getTotallyInitialState = (value) => {
-  tnm.setValue(value);
-  return tnm;
-};
-
-export const getTotallyInitialStateAutofreeze = (value) => {
-  tnmAutoFreeze.setValue(value);
-  return tnmAutoFreeze;
-};
 
 console.log("\n# todo - performance\n");
 
@@ -244,10 +230,6 @@ measure(
   () => {
     return getTotallyInitialState(baseState);
   },
-  /**
-   *
-   * @param {TotallyNotMutable} tnm
-   */
   (tnm) => {
     tnm.mutate((state) => {
       for (let i = 0; i < MAX * MODIFY_FACTOR; i++) {
@@ -263,10 +245,6 @@ measure(
   () => {
     return getTotallyInitialStateAutofreeze(baseState);
   },
-  /**
-   *
-   * @param {TotallyNotMutable} tnm
-   */
   (tnm) => {
     tnm.mutate((state) => {
       for (let i = 0; i < MAX * MODIFY_FACTOR; i++) {

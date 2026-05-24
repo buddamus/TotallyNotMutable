@@ -5,8 +5,6 @@ import cloneDeep from "lodash.clonedeep";
 import Immutable from "immutable";
 import { TotallyNotMutable } from "../../build/TotallyNotMutable.js";
 
-console.log("\n# incremental - lot of small incremental changes\n");
-
 function createTestObject() {
   return {
     a: 1,
@@ -19,6 +17,8 @@ const baseState = {
   ids: [],
   map: Object.create(null),
 };
+
+console.log("\n# incremental - new value after every change (separate calls)\n");
 
 measure(
   "just mutate",
@@ -63,22 +63,6 @@ measure(
 );
 
 measure(
-  "immutableJS - single withMutations",
-  () => cloneDeep(baseState),
-  (state) => {
-    state = Immutable.fromJS(state);
-    state.withMutations((state) => {
-      for (let i = 0; i < MAX; i++) {
-        state.updateIn(["ids"], (arr) => arr.push(i));
-        state.updateIn(["map"], (arr) =>
-          arr.set(i, Immutable.Map(createTestObject()))
-        );
-      }
-    });
-  }
-);
-
-measure(
   "immer - multiple produces",
   () => {
     setAutoFreeze(false);
@@ -91,22 +75,6 @@ measure(
         draft.map[i] = createTestObject();
       });
     }
-  }
-);
-
-measure(
-  "immer - single produce",
-  () => {
-    setAutoFreeze(false);
-    return cloneDeep(baseState);
-  },
-  (state) => {
-    produce(state, (draft) => {
-      for (let i = 0; i < MAX; i++) {
-        draft.ids.push(i);
-        draft.map[i] = createTestObject();
-      }
-    });
   }
 );
 
@@ -124,6 +92,40 @@ measure(
         draft.map[i] = createTestObject();
       });
     }
+  }
+);
+
+console.log("\n# incremental - all changes batched into one call\n");
+
+measure(
+  "immutableJS - single withMutations",
+  () => cloneDeep(baseState),
+  (state) => {
+    state = Immutable.fromJS(state);
+    state.withMutations((state) => {
+      for (let i = 0; i < MAX; i++) {
+        state.updateIn(["ids"], (arr) => arr.push(i));
+        state.updateIn(["map"], (arr) =>
+          arr.set(i, Immutable.Map(createTestObject()))
+        );
+      }
+    });
+  }
+);
+
+measure(
+  "immer - single produce",
+  () => {
+    setAutoFreeze(false);
+    return cloneDeep(baseState);
+  },
+  (state) => {
+    produce(state, (draft) => {
+      for (let i = 0; i < MAX; i++) {
+        draft.ids.push(i);
+        draft.map[i] = createTestObject();
+      }
+    });
   }
 );
 

@@ -11,11 +11,11 @@ import { TotallyNotMutable } from "../../build/TotallyNotMutable.js";
 
 console.log("\n# add-data - loading large set of data\n");
 
-import dataSet from "./data.json" assert { type: "json" };
+import dataSet from "./data.json" with { type: "json" };
 import {
   getTotallyInitialState,
   getTotallyInitialStateAutofreeze,
-} from "./todo.mjs";
+} from "./tnm-helpers.mjs";
 
 const baseState = {
   data: null,
